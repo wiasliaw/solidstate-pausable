@@ -20,4 +20,12 @@ contract FacetD is Pausable {
     function trigger() external whenNotPaused {
         emit Trigger();
     }
+
+    function pause() external {
+        _pause();
+    }
+
+    function unpause() external {
+        _unpause();
+    }
 }
