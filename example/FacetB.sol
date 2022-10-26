@@ -17,15 +17,15 @@ contract FacetB is Pausable {
         return _mask();
     }
 
-    function trigger() external whenNotPaused {
+    function trigger() external whenNotPaused(_mask()) {
         emit Trigger();
     }
 
     function pause() external {
-        _pause();
+        _pause(_mask());
     }
 
     function unpause() external {
-        _unpause();
+        _unpause(_mask());
     }
 }

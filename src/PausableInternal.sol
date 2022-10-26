@@ -13,32 +13,30 @@ abstract contract PausableInternal {
     event Paused(address indexed account);
     event Unpaused(address indexed account);
 
-    modifier whenNotPaused() {
-        if (_paused()) revert Pausable__Paused();
+    modifier whenNotPaused(uint256 mask) {
+        if (_paused(mask)) revert Pausable__Paused();
         _;
     }
 
-    modifier whenPaused() {
-        if (!_paused()) revert Pausable__NotPaused();
+    modifier whenPaused(uint256 mask) {
+        if (!_paused(mask)) revert Pausable__NotPaused();
         _;
     }
 
-    function _paused() internal view virtual returns (bool) {
-        return PausableStorage.layout().paused & _mask() != 0;
+    function _paused(uint256 mask) internal view virtual returns (bool) {
+        return PausableStorage.layout().paused & mask != 0;
     }
 
-    function _pause() internal virtual whenNotPaused {
-        PausableStorage.layout().paused ^= _mask();
+    function _pause(uint256 mask) internal virtual whenNotPaused(mask) {
+        PausableStorage.layout().paused ^= mask;
         emit Paused(msg.sender);
     }
 
-    function _unpause() internal virtual whenPaused {
-        PausableStorage.layout().paused ^= _mask();
+    function _unpause(uint256 mask) internal virtual whenPaused(mask) {
+        PausableStorage.layout().paused ^= mask;
         emit Unpaused(msg.sender);
     }
 
-    /**
-     * @dev Need to decide which bit should be set for pauability
-     */
+    // hint for implementation
     function _mask() internal view virtual returns (uint256);
 }
