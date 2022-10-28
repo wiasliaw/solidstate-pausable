@@ -24,21 +24,60 @@ abstract contract PausableInternal {
     }
 
     function _paused() internal view virtual returns (bool) {
-        return PausableStorage.layout().paused & _mask() != 0;
+        return PausableStorage.layout().paused == uint256(1);
     }
 
     function _pause() internal virtual whenNotPaused {
-        PausableStorage.layout().paused ^= _mask();
+        PausableStorage.layout().paused ^= uint256(1);
         emit Paused(msg.sender);
     }
 
     function _unpause() internal virtual whenPaused {
-        PausableStorage.layout().paused ^= _mask();
+        PausableStorage.layout().paused ^= uint256(1);
         emit Unpaused(msg.sender);
     }
 
+    /** ***** ***** ***** ***** *****
+     * Partial Pausable
+     ***** ***** ***** ***** ***** */
+    modifier whenNotPartiallyPaused(uint256 mask) {
+        if (_partiallyPaused(mask)) revert Pausable__Paused();
+        _;
+    }
+
+    modifier whenPartiallyPaused(uint256 mask) {
+        if (!_partiallyPaused(mask)) revert Pausable__NotPaused();
+        _;
+    }
+
     /**
-     * @dev Need to decide which bit should be set for pauability
+     * @notice query the contracts paused state.
+     * @return true if paused, false if unpaused.
      */
-    function _mask() internal view virtual returns (uint256);
+    function _partiallyPaused(uint256 mask)
+        internal
+        view
+        virtual
+        returns (bool)
+    {
+        return PausableStorage.layout().paused & mask != 0;
+    }
+
+    function _partiallyPause(uint256 mask)
+        internal
+        virtual
+        whenNotPartiallyPaused(mask)
+    {
+        PausableStorage.layout().paused ^= mask;
+        emit Paused(msg.sender);
+    }
+
+    function _partiallyUnpause(uint256 mask)
+        internal
+        virtual
+        whenPartiallyPaused(mask)
+    {
+        PausableStorage.layout().paused ^= mask;
+        emit Unpaused(msg.sender);
+    }
 }
