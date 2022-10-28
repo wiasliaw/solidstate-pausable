@@ -13,30 +13,71 @@ abstract contract PausableInternal {
     event Paused(address indexed account);
     event Unpaused(address indexed account);
 
-    modifier whenNotPaused(uint256 mask) {
-        if (_paused(mask)) revert Pausable__Paused();
+    modifier whenNotPaused() {
+        if (_paused()) revert Pausable__Paused();
         _;
     }
 
-    modifier whenPaused(uint256 mask) {
-        if (!_paused(mask)) revert Pausable__NotPaused();
+    modifier whenPaused() {
+        if (!_paused()) revert Pausable__NotPaused();
         _;
     }
 
-    function _paused(uint256 mask) internal view virtual returns (bool) {
+    function _paused() internal view virtual returns (bool) {
+        return PausableStorage.layout().paused == uint256(1);
+    }
+
+    function _pause() internal virtual whenNotPaused {
+        PausableStorage.layout().paused ^= uint256(1);
+        emit Paused(msg.sender);
+    }
+
+    function _unpause() internal virtual whenPaused {
+        PausableStorage.layout().paused ^= uint256(1);
+        emit Unpaused(msg.sender);
+    }
+
+    /** ***** ***** ***** ***** *****
+     * Partial Pausable
+     ***** ***** ***** ***** ***** */
+    modifier whenNotPartiallyPaused(uint256 mask) {
+        if (_partiallyPaused(mask)) revert Pausable__Paused();
+        _;
+    }
+
+    modifier whenPartiallyPaused(uint256 mask) {
+        if (!_partiallyPaused(mask)) revert Pausable__NotPaused();
+        _;
+    }
+
+    /**
+     * @notice query the contracts paused state.
+     * @return true if paused, false if unpaused.
+     */
+    function _partiallyPaused(uint256 mask)
+        internal
+        view
+        virtual
+        returns (bool)
+    {
         return PausableStorage.layout().paused & mask != 0;
     }
 
-    function _pause(uint256 mask) internal virtual whenNotPaused(mask) {
+    function _partiallyPause(uint256 mask)
+        internal
+        virtual
+        whenNotPartiallyPaused(mask)
+    {
         PausableStorage.layout().paused ^= mask;
         emit Paused(msg.sender);
     }
 
-    function _unpause(uint256 mask) internal virtual whenPaused(mask) {
+    function _partiallyUnpause(uint256 mask)
+        internal
+        virtual
+        whenPartiallyPaused(mask)
+    {
         PausableStorage.layout().paused ^= mask;
         emit Unpaused(msg.sender);
     }
-
-    // hint for implementation
-    function _mask() internal view virtual returns (uint256);
 }

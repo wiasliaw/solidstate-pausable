@@ -5,6 +5,6 @@ import { PausableInternal } from './PausableInternal.sol';
 
 abstract contract Pausable is PausableInternal {
     function paused() external view virtual returns (bool) {
-        return _paused(_mask());
+        return _paused();
     }
 }
